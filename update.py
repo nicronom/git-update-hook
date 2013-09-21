@@ -1,10 +1,10 @@
 #!/usr/local/bin/python
-# -*- coding: utf-8 -*-
-
-import subprocess
-import sys
+# coding: utf-8
 import re
+import sys
 import string
+import subprocess
+
 
 AVAILABLE_ACTIONS = "feature|fix|docs|style|refactor|test|temp|maintain|Merge"
 REF_EMPTY = "0000000000000000000000000000000000000000"
@@ -25,20 +25,25 @@ REASON_FORMAT = "Bad format"
 LENGTH_MAX = 80
 LENGTH_MAX_FIRST = 100
 
+
 def runBash(commandLine):
     process = subprocess.Popen(commandLine, shell=True, stdout=subprocess.PIPE)
     out = process.stdout.read().strip()
     return out
 
+
 def getLineErrorMessage(number, reason):
     return MESSAGE_LINE.format(str(number), reason)
+
 
 def getProjectName():
     return runBash(COMMAND_PROJECT_NAME)
 
+
 def checkCommit(hash):
     commitMessage = runBash(COMMAND_COMMIT_MESSAGE.format(hash))
     return checkMessage(commitMessage)
+
 
 def checkMessage(message):
     result = {"errors": [], "ok": True}
@@ -64,6 +69,7 @@ def checkMessage(message):
         number = number + 1
     return result
 
+
 def checkFirstLine(line):
     result = {"ok": True, "errors": []}
     expression = r"^({0}\-\d+ )?({1})(\/({1}))* .*".format(
@@ -76,6 +82,7 @@ def checkFirstLine(line):
         result["ok"] = False
         result["errors"].append(getLineErrorMessage(1, REASON_TOO_LONG))
     return result
+
 
 def main():
     ref = sys.argv[1]
