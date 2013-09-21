@@ -47,26 +47,21 @@ def checkCommit(hash):
 
 def checkMessage(message):
     result = {"errors": [], "ok": True}
-    number = 1
     lines = message.split("\n")
-    for line in lines:
-        if number == 1:
+    for number, line in enumerate(lines):
+        if number == 0:
             checkResult = checkFirstLine(line)
             result["ok"] = checkResult["ok"]
             result["errors"].extend(checkResult["errors"])
-        elif number == 2:
-            if len(line) > 0:
-                result["ok"] = False
-                result["errors"].append(
-                    getLineErrorMessage(number, REASON_NOT_BLANK)
-                )
-        else:
-            if len(line.decode("utf-8")) > LENGTH_MAX:
-                result["ok"] = False
-                result["errors"].append(
-                    getLineErrorMessage(number, REASON_TOO_LONG)
-                )
-        number = number + 1
+            continue
+
+        line_length = LENGTH_MAX if number > 1 else 0
+        if len(line.decode("utf-8")) > line_length:
+            result["ok"] = False
+            result["errors"].append(
+                getLineErrorMessage(number, REASON_TOO_LONG)
+            )
+
     return result
 
 
@@ -85,9 +80,8 @@ def checkFirstLine(line):
 
 
 def main():
-    ref = sys.argv[1]
-    refOld = sys.argv[2]
-    revNew = sys.argv[3]
+    ref, refOld, revNew = sys.argv[1:]
+
     # if new branch is pushing
     if refOld == REF_EMPTY:
         headList = runBash(COMMAND_FOR_EACH)
@@ -105,16 +99,17 @@ def main():
         result["hash"] = commit
         results.append(result)
         ok = ok and result["ok"]
-    if not ok:
-        print MESSAGE_RULES
-        for result in results:
-            if not result["ok"]:
-                print "Commit {}:\n{}\n".format(
-                    result["hash"], string.join(result["errors"], "\n")
-                )
-        return 1
-    else:
+
+    if ok:
         return 0
+
+    print MESSAGE_RULES
+    for result in results:
+        if not result["ok"]:
+            print "Commit {}:\n{}\n".format(
+                result["hash"], string.join(result["errors"], "\n")
+            )
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main())
